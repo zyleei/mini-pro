@@ -11,6 +11,29 @@ module tpumac
    output reg signed [BITS_C-1:0] Cout
   );
 
+wire [15:0] sum, cnxt;
 
+// direct outputs
+always @(posedge clk) begin
+  if (!rst_n) begin
+    Aout <= 0;
+    Bout <= 0;
+  end
+  else if (en) begin
+    Aout <= Ain;
+    Bout <= Bin;
+  end
+end
 
+assign sum = Ain * Bin + Cout;
+assign cnxt = WrEn ? Cin : sum;
 
+// reg C
+always @(posedge clk) begin
+  if (!rst_n)
+    Cout <= 0;
+  else if (en)
+    Cout <= cnxt;
+end
+
+endmodule
