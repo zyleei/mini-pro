@@ -1,4 +1,5 @@
-module tpumac_tb #(parameter BITS_AB=8, parameter BITS_C=16) ();
+module tpumac_tb #(parameter BITS_AB=8,
+		   parameter BITS_C=16) ();
 
 logic clk, rst_n, WrEn, en;
 bit signed [BITS_AB-1:0] Ain, Bin;
@@ -6,8 +7,9 @@ bit signed [BITS_C-1:0] Cin;
 wire signed [BITS_AB-1:0] Aout;
 wire signed [BITS_AB-1:0] Bout;
 wire signed [BITS_C-1:0] Cout;
-integer a, b, c, cnt;
-
+integer a, b; // randomly generated inputs
+integer c; // C output
+integer cnt; // iteration count
 
 // DUT
 tpumac tpumac0 (.clk(clk), .rst_n(rst_n), .WrEn(WrEn), .en(en),
@@ -28,21 +30,22 @@ initial clk = 0;
 always
   #5 clk = ~clk;
 
+// stimulation
 initial begin
-rst_n = 0;
+rst_n = 0; // reset
 en = 0;
 WrEn = 0;
 @(posedge clk);
 @(negedge clk) rst_n = 1;
 
 
-// test 1
+// test 1: check reset
 if ((Aout!=0) || (Bout!=0) || (Cout!=0)) begin
   $display("register(s) not reset properly\ntest 1 failed\n");
   $stop;
 end
 
-// test 2
+// test 2: check if regs function properly when en is high
 Ain = 8'h7F;
 Bin = 8'hFF;
 Cin = 16'h0101;
@@ -55,7 +58,7 @@ if ((Aout!=8'h7F) || (Bout!=8'hFF) || (Cout!=16'h0101)) begin
   $stop;
 end
 
-// test 3
+// test 3: check if regs function properly when en is low
 en = 0;
 WrEn = 0;
 Ain = 8'h20;
@@ -67,7 +70,8 @@ if ((Aout!=8'h7F) || (Bout!=8'hFF) || (Cout!=16'h0101)) begin
   $stop;
 end
 
-// test 4
+// test 4: special cases: one of the inputs is 0
+// Cout should not change if either A or B is 0
 en = 1;
 Ain = 0;
 Bin = 8'h21;
@@ -87,11 +91,14 @@ if ((Aout!=8'h20) || (Bout!=0) || (Cout!=16'h0101)) begin
   $stop;
 end
 
-// random tests
+// random tests: randomly generate A, B inputs
+// compare DUT's result with that of the simulation
+// exit when overflow occurs
 WrEn = 0;
 c = Cout;
 cnt = 0;
 while (cnt < 100) begin
+  // generate random inputs
   stim.randomize();
   Ain = stim.vec_a;
   a = stim.vec_a;
@@ -100,6 +107,7 @@ while (cnt < 100) begin
   $display("(iter. %d) a: %d; b: %d; c: %d", cnt, a, b, c);
   c = c + a * b;
   $display("c_new: %d", c);
+  // exit when simulation result cannot be represented with 16 bits
   if ((c>16'sh7FFF) || (c<16'sh8000)) begin
     $display("c: %h(%d) out of bound\n", c, c);
     break;
