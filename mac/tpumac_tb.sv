@@ -32,13 +32,13 @@ initial begin
 rst_n = 0;
 en = 0;
 WrEn = 0;
-@(posedge clk)
+@(posedge clk);
 @(negedge clk) rst_n = 1;
 
 
 // test 1
 if ((Aout!=0) || (Bout!=0) || (Cout!=0)) begin
-  $display("register(s) not reset properly\n");
+  $display("register(s) not reset properly\ntest 1 failed\n");
   $stop;
 end
 
@@ -51,7 +51,39 @@ en = 1;
 @(posedge clk);
 #1
 if ((Aout!=8'h7F) || (Bout!=8'hFF) || (Cout!=16'h0101)) begin
-  $display("Incorrect values: A: %h, B: %h, C: %h\n", Aout, Bout, Cout);
+  $display("Incorrect values: A: %h, B: %h, C: %h\ntest 2 failed\n", Aout, Bout, Cout);
+  $stop;
+end
+
+// test 3
+en = 0;
+WrEn = 0;
+Ain = 8'h20;
+Bin = 8'h21;
+@(posedge clk);
+#1
+if ((Aout!=8'h7F) || (Bout!=8'hFF) || (Cout!=16'h0101)) begin
+  $display("Incorrect values: A: %h, B: %h, C: %h\ntest 3 failed\n", Aout, Bout, Cout);
+  $stop;
+end
+
+// test 4
+en = 1;
+Ain = 0;
+Bin = 8'h21;
+@(posedge clk);
+#1
+if ((Aout!=0) || (Bout!=8'h21) || (Cout!=16'h0101)) begin
+  $display("Incorrect values: A: %h, B: %h, C: %h\ntest 4 failed\n", Aout, Bout, Cout);
+  $stop;
+end
+
+Ain = 8'h20;
+Bin = 0;
+@(posedge clk);
+#1
+if ((Aout!=8'h20) || (Bout!=0) || (Cout!=16'h0101)) begin
+  $display("Incorrect values: A: %h, B: %h, C: %h\ntest 4 failed\n", Aout, Bout, Cout);
   $stop;
 end
 
@@ -59,7 +91,7 @@ end
 WrEn = 0;
 c = Cout;
 cnt = 0;
-while (cnt < 1000) begin
+while (cnt < 100) begin
   stim.randomize();
   Ain = stim.vec_a;
   a = stim.vec_a;
