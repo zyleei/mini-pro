@@ -32,7 +32,7 @@ assign cnxt = WrEn ? Cin : sum;
 always @(posedge clk) begin
   if (!rst_n)
     Cout <= 0;
-  else if (en)
+  else if (en|WrEn)
     Cout <= cnxt;
 end
 
