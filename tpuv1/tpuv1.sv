@@ -13,7 +13,7 @@ module tpuv1
     input [ADDRW-1:0] addr
    );
 
-
+localparam DIM_LOG = $clog2(DIM);
 reg [$clog2(4*DIM):0] cnt_comp;
 logic signed [BITS_AB-1:0] Aout [DIM-1:0];
 logic signed [BITS_AB-1:0] Bin [DIM-1:0];
@@ -38,18 +38,18 @@ assign Cin[DIM-1:DIM/2] = Cin_hi;
 assign Cin[DIM/2-1:0] = Cin_lo;
 assign hi = addr[$clog2(DIM)];
 assign in_prog = |cnt_comp;
-assign Arow = addr[5:3];
-assign Crow = addr[6:4];
-assign WrEn_A = r_w & (addr>=16'h0100 & addr<=16'h0138);
-assign WrEn_C = r_w & (addr>=16'h0300 & addr<=16'h0378) & hi;
+assign Arow = addr[DIM_LOG+2:DIM_LOG];
+assign Crow = addr[DIM_LOG+3:DIM_LOG+1];
+assign WrEn_A = r_w & (addr[ADDRW-1:ADDRW/2] == 8'h01);
+assign WrEn_C = r_w & (addr[ADDRW-1:ADDRW/2] == 8'h03) & hi;
 assign enA = in_prog;
-assign enB = in_prog | (r_w & (addr>=16'h0200 & addr<=16'h0238));
+assign enB = in_prog | (r_w & (addr[ADDRW-1:ADDRW/2] == 8'h02));
 assign enC = in_prog;
 assign Cout_lo[DIM/2-1:0] = Cout[DIM/2-1:0];
 assign Cout_hi[DIM/2-1:0] = Cout[DIM-1:DIM/2];
 assign Bin = r_w ? in_AB : {>>{0}};
-assign {>>{in_AB[DIM-1:0]}} = dataIn;
-assign in_C = {>>16{dataIn}};
+assign {>>{in_AB}} = dataIn;
+assign {>>{in_C}} = dataIn;
 assign dataOut = hi ? {>>{Cout_hi}} : {>>{Cout_lo}};
 
 memA #(.BITS_AB(BITS_AB), .DIM(DIM))
